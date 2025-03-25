@@ -18,6 +18,7 @@ const drive = google.drive({ version: "v3", auth });
 // Function to upload a file to Google Drive
 async function uploadFile(filePath: string, fileName: string) {
   try {
+    console.log(`Starting upload for file: ${fileName}`);
     const media = fs.createReadStream(filePath);
     const fileMetadata = {
       name: fileName,
@@ -34,27 +35,29 @@ async function uploadFile(filePath: string, fileName: string) {
     console.log(`File uploaded successfully with ID: ${response.data.id}`);
     return response.data.id;
   } catch (error) {
-    console.error("❌ Error uploading file:", error);
+    console.error("❌ Error uploading file:", error.message || error);
+    return null;
   }
 }
 
 // Function to share a file on Google Drive
 async function shareFile(fileId: string, userEmail: string) {
   try {
+    console.log(`Sharing file with ${userEmail}`);
     const permission = {
       type: "user",
       role: "reader",  // Set as "reader" for read-only access
       emailAddress: userEmail,
     };
 
-    await drive.permissions.create({
+    const permissionResponse = await drive.permissions.create({
       fileId,
       requestBody: permission,
     });
 
-    console.log(`File shared successfully with ${userEmail}`);
+    console.log(`File shared successfully with ${userEmail}, Permission ID: ${permissionResponse.data.id}`);
   } catch (error) {
-    console.error("❌ Error sharing file:", error);
+    console.error("❌ Error sharing file:", error.message || error);
   }
 }
 
@@ -62,10 +65,11 @@ async function shareFile(fileId: string, userEmail: string) {
 const filePath = "hi.txt";
 fs.writeFileSync(filePath, "hi");
 
-// Upload the file
 uploadFile(filePath, "hi.txt").then((fileId) => {
   if (fileId) {
     // Share the file with the specified email
     shareFile(fileId, "georgianhomoeomedicalcenter@gmail.com");
+  } else {
+    console.error("❌ File upload failed. File not shared.");
   }
 });
