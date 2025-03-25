@@ -43,7 +43,7 @@ async function shareFile(fileId: string, userEmail: string) {
   try {
     const permission = {
       type: "user",
-      role: "reader",
+      role: "reader",  // Set as "reader" for read-only access
       emailAddress: userEmail,
     };
 
@@ -65,7 +65,7 @@ fs.writeFileSync(filePath, "hi");
 // Upload the file
 uploadFile(filePath, "hi.txt").then((fileId) => {
   if (fileId) {
-    // Share the file with a specific email
+    // Share the file with the specified email
     shareFile(fileId, "georgianhomoeomedicalcenter@gmail.com");
   }
 });
