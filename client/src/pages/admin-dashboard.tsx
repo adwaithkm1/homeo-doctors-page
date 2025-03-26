@@ -5,7 +5,8 @@ import { Appointment } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { DataTable } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
-import googleDriveClient from '../googleDriveClient';
+import googleDriveClient from '../../../googleDriveClient';
+
 
 export default function AdminDashboard() {
   const { toast } = useToast();
