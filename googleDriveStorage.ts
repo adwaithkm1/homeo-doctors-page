@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { Appointment } from "@shared/schema";
 
-const DRIVE_FOLDER_ID = "1D_s20e_oLAoZKTXtqcY1bcJ7xF0Gnu51"; // 📌 Replace with your Google Drive Folder ID
+const DRIVE_FOLDER_ID = "1peEN__NlGh0iGi6xkCwg8tU4kkUYoO03"; // 📌 Replace with your Google Drive Folder ID
 
 const FILE_NAME = "appointment_backup.json";
 const filePath = path.join(process.cwd(), FILE_NAME);
