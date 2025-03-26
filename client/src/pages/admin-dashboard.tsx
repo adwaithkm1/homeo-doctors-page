@@ -41,13 +41,13 @@ export default function AdminDashboard() {
     };
 
     if (params.has("name") && params.has("email")) {
-      saveDataToDrive(newAppointment);
+     uploadFile(newAppointment);
       toast({ title: "New Appointment", description: "Data saved to Google Drive." });
     }
   }
 
   // ✅ Save appointment data to Google Drive
-  async function saveDataToDrive(appointment: Appointment) {
+  async function uploadfile(appointment: Appointment) {
     try {
       const response = await googleDriveStorage.uploadJSON(
         `appointment-${appointment.id}.json`,
