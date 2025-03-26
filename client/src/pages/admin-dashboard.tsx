@@ -41,16 +41,16 @@ export default function AdminDashboard() {
     };
 
     if (params.has("name") && params.has("email")) {
-     uploadFile(newAppointment);
+      uploadFile(newAppointment);
       toast({ title: "New Appointment", description: "Data saved to Google Drive." });
     }
   }
 
   // ✅ Save appointment data to Google Drive
-  async function uploadfile(appointment: Appointment) {
+  async function uploadFile(appointment: Appointment) {
     try {
-      const response = await googleDriveStorage.uploadJSON(
-        appointment-${appointment.id}.json,
+      const response = await googleDriveClient.uploadJSON(
+        `appointment-${appointment.id}.json`, // ✅ Fixed Template Literal
         appointment
       );
       console.log("✅ Saved to Drive:", response);
@@ -63,10 +63,10 @@ export default function AdminDashboard() {
   // ✅ Mutation to delete appointment (backs up before deleting)
   const deleteAppointmentMutation = useMutation({
     mutationFn: async (id: number) => {
-      const getRes = await apiRequest("GET", /api/appointments/${id});
+      const getRes = await apiRequest("GET", `/api/appointments/${id}`);
       const appointment = await getRes.json();
-      await saveDataToDrive(appointment); // Backup before deleting
-      const deleteRes = await apiRequest("DELETE", /api/appointments/${id});
+      await uploadFile(appointment); // ✅ Backup before deleting
+      const deleteRes = await apiRequest("DELETE", `/api/appointments/${id}`);
       return deleteRes.json();
     },
     onSuccess: () => {
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // ✅ Restore deleted data from Google Drive
   const handleRestore = async () => {
     try {
-      const data = await googleDriveStorage.fetchBackupData();
+      const data = await googleDriveClient.fetchBackupData();
       setDeletedData(data ?? []);
       toast({ title: "Deleted data loaded", description: "Available for restoration." });
     } catch (error) {
@@ -110,4 +110,4 @@ export default function AdminDashboard() {
       />
     </div>
   );
-}  
+}
