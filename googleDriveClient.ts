@@ -40,36 +40,28 @@ async function uploadFile(filePath: string, fileName: string) {
   }
 }
 
-// Function to share a file on Google Drive
-async function shareFile(fileId: string, userEmail: string) {
-  try {
-    console.log(`Sharing file with ${userEmail}`);
-    const permission = {
-      type: "user",
-      role: "reader",  // Set as "reader" for read-only access
-      emailAddress: userEmail,
-    };
+// A Function that will upload the desired file to google drive folder
+async function uploadFile(authClient){
+    return new Promise((resolve,rejected)=>{
+        const drive = google.drive({version:'v3',auth:authClient}); 
 
-    const permissionResponse = await drive.permissions.create({
-      fileId,
-      requestBody: permission,
+        var fileMetaData = {
+            name:'mydrivetext.txt',    
+            parents:['1peEN__NlGh0iGi6xkCwg8tU4kkUYoO03'] // A folder ID to which file will get uploaded
+        }
+
+        drive.files.create({
+            resource:fileMetaData,
+            media:{
+                body: fs.createReadStream('mydrivetext.txt'), // files that will get uploaded
+                mimeType:'text/plain'
+            },
+            fields:'id'
+        },function(error,file){
+            if(error){
+                return rejected(error)
+            }
+            resolve(file);
+        })
     });
-
-    console.log(`File shared successfully with ${userEmail}, Permission ID: ${permissionResponse.data.id}`);
-  } catch (error) {
-    console.error("❌ Error sharing file:", error.message || error);
-  }
 }
-
-// Create and upload a simple "hi.txt" file
-const filePath = "hi.txt";
-fs.writeFileSync(filePath, "hi");
-
-uploadFile(filePath, "hi.txt").then((fileId) => {
-  if (fileId) {
-    // Share the file with the specified email
-    shareFile(fileId, "georgianhomoeomedicalcenter@gmail.com");
-  } else {
-    console.error("❌ File upload failed. File not shared.");
-  }
-});
