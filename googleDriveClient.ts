@@ -7,13 +7,25 @@ const serviceAccountInfo = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || '{}'
 
 // Authenticate using service account credentials
 const auth = new JWT({
-  email: serviceAccountInfo.client_email,
   key: serviceAccountInfo.private_key,
-  scopes: ["https://www.googleapis.com/auth/drive.file"]
+  scopes: ["https://www.googleapis.com/auth/drive"]
 });
 
 // Initialize the Drive API client
-const drive = google.drive({ version: "v3", auth });
+// A Function that can provide access to google drive api
+async function authorize(){
+    const jwtClient = new google.auth.JWT(
+        apikeys.client_email,
+        null,
+        apikeys.private_key,
+        SCOPE
+    );
+
+    await jwtClient.authorize();
+
+    return jwtClient;
+}
+
 
 // Function to upload a file to Google Drive
 async function uploadFile(filePath: string, fileName: string) {
