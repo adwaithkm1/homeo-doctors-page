@@ -5,7 +5,7 @@ import { Appointment } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { DataTable } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
-import googleDriveClient from '../googleDriveClient';
+import googleDriveClient from "../googleDriveClient";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -41,22 +41,26 @@ export default function AdminDashboard() {
     };
 
     if (params.has("name") && params.has("email")) {
-     uploadFile(newAppointment);
+      uploadFile(newAppointment);
       toast({ title: "New Appointment", description: "Data saved to Google Drive." });
     }
   }
 
   // ✅ Save appointment data to Google Drive
-  async function uploadfile(appointment: Appointment) {
+  async function uploadFile(appointment: Appointment) {
     try {
-      const response = await googleDriveStorage.uploadJSON(
+      const response = await googleDriveClient.uploadJSON(
         `appointment-${appointment.id}.json`,
         appointment
       );
       console.log("✅ Saved to Drive:", response);
     } catch (error) {
       console.error("❌ Google Drive save error:", error);
-      toast({ title: "Google Drive Error", description: "Failed to save data.", variant: "destructive" });
+      toast({
+        title: "Google Drive Error",
+        description: "Failed to save data.",
+        variant: "destructive",
+      });
     }
   }
 
@@ -65,24 +69,31 @@ export default function AdminDashboard() {
     mutationFn: async (id: number) => {
       const getRes = await apiRequest("GET", `/api/appointments/${id}`);
       const appointment = await getRes.json();
-      await saveDataToDrive(appointment); // Backup before deleting
+      await uploadFile(appointment); // Backup before deleting
       const deleteRes = await apiRequest("DELETE", `/api/appointments/${id}`);
       return deleteRes.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
-      toast({ title: "Appointment deleted", description: "Backup saved to Google Drive." });
+      toast({
+        title: "Appointment deleted",
+        description: "Backup saved to Google Drive.",
+      });
     },
   });
 
   // ✅ Restore deleted data from Google Drive
   const handleRestore = async () => {
     try {
-      const data = await googleDriveStorage.fetchBackupData();
+      const data = await googleDriveClient.fetchBackupData();
       setDeletedData(data ?? []);
       toast({ title: "Deleted data loaded", description: "Available for restoration." });
     } catch (error) {
-      toast({ title: "Restore error", description: "Failed to load backup.", variant: "destructive" });
+      toast({
+        title: "Restore error",
+        description: "Failed to load backup.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -95,10 +106,10 @@ export default function AdminDashboard() {
       </button>
 
       {/* ✅ Main Appointments Table */}
-      <DataTable 
-        data={safeAppointments} 
-        isLoading={isLoading} 
-        error={error as Error} 
+      <DataTable
+        data={safeAppointments}
+        isLoading={isLoading}
+        error={error as Error}
         columns={[
           { header: "Name", accessorKey: "name", sortable: true },
           { header: "Email", accessorKey: "email", sortable: true },
