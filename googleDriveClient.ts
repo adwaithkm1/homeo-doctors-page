@@ -1,79 +1,49 @@
-import { google } from "googleapis";
-import { JWT } from "google-auth-library";
-import * as fs from "fs";
+const fs = require('fs');
+const { google } = require('googleapis');
 
-// Read the service account credentials from environment variables
-const serviceAccountInfo = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || '{}');
+const SCOPE = ['https://www.googleapis.com/auth/drive.file'];
+const FOLDER_ID = process.env.FOLDER_ID; // Folder ID from environment variable
 
-// Authenticate using service account credentials
-const auth = new JWT({
-  key: serviceAccountInfo.private_key,
-  scopes: ["https://www.googleapis.com/auth/drive"]
-});
-
-// Initialize the Drive API client
-// A Function that can provide access to google drive api
-async function authorize(){
+// A Function that can provide access to Google Drive API
+async function authorize() {
     const jwtClient = new google.auth.JWT(
-        apikeys.client_email,
+        process.env.CLIENT_EMAIL,
         null,
-        apikeys.private_key,
+        process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Ensure proper formatting
         SCOPE
     );
 
     await jwtClient.authorize();
-
     return jwtClient;
 }
 
+// A Function that will upload the desired file to Google Drive folder
+async function uploadFile(authClient) {
+    try {
+        const drive = google.drive({ version: 'v3', auth: authClient });
+        const filePath = 'mydrivetext.txt';
+        fs.writeFileSync(filePath, 'This is a test file.');
+        
+        const fileMetadata = {
+            name: 'mydrivetext.txt',
+            parents: FOLDER_ID ? [FOLDER_ID] : []
+        };
 
-// Function to upload a file to Google Drive
-async function uploadFile(filePath: string, fileName: string) {
-  try {
-    console.log(`Starting upload for file: ${fileName}`);
-    const media = fs.createReadStream(filePath);
-    const fileMetadata = {
-      name: fileName,
-    };
+        const media = {
+            mimeType: 'text/plain',
+            body: fs.createReadStream(filePath)
+        };
 
-    const response = await drive.files.create({
-      requestBody: fileMetadata,
-      media: {
-        body: media,
-      },
-      fields: "id",
-    });
-
-    console.log(`File uploaded successfully with ID: ${response.data.id}`);
-    return response.data.id;
-  } catch (error) {
-    console.error("❌ Error uploading file:", error.message || error);
-    return null;
-  }
+        const response = await drive.files.create({
+            requestBody: fileMetadata,
+            media,
+            fields: 'id'
+        });
+        
+        console.log(`✅ File uploaded successfully. File ID: ${response.data.id}`);
+    } catch (error) {
+        console.error('❌ Error uploading file:', error.message || error);
+    }
 }
 
-// A Function that will upload the desired file to google drive folder
-async function uploadFile(authClient){
-    return new Promise((resolve,rejected)=>{
-        const drive = google.drive({version:'v3',auth:authClient}); 
-
-        var fileMetaData = {
-            name:'mydrivetext.txt',    
-            parents:['1peEN__NlGh0iGi6xkCwg8tU4kkUYoO03'] // A folder ID to which file will get uploaded
-        }
-
-        drive.files.create({
-            resource:fileMetaData,
-            media:{
-                body: fs.createReadStream('mydrivetext.txt'), // files that will get uploaded
-                mimeType:'text/plain'
-            },
-            fields:'id'
-        },function(error,file){
-            if(error){
-                return rejected(error)
-            }
-            resolve(file);
-        })
-    });
-}
+authorize().then(uploadFile).catch(console.error);
