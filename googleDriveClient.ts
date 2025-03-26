@@ -1,24 +1,23 @@
-const fs = require('fs');
-const { google } = require('googleapis');
+import fs from 'fs';
+import { google } from 'googleapis';
 
 const SCOPE = ['https://www.googleapis.com/auth/drive.file'];
 const FOLDER_ID = process.env.FOLDER_ID; // Folder ID from environment variable
 
-// A Function that can provide access to Google Drive API
-async function authorize() {
+// Function to authenticate with Google Drive API
+async function authorize(): Promise<any> {
     const jwtClient = new google.auth.JWT(
         process.env.CLIENT_EMAIL,
-        null,
+        undefined,
         process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Ensure proper formatting
         SCOPE
     );
-
     await jwtClient.authorize();
     return jwtClient;
 }
 
-// A Function that will upload the desired file to Google Drive folder
-async function uploadFile(authClient) {
+// Function to upload a file to Google Drive folder
+async function uploadFile(authClient: any): Promise<void> {
     try {
         const drive = google.drive({ version: 'v3', auth: authClient });
         const filePath = 'mydrivetext.txt';
@@ -41,9 +40,10 @@ async function uploadFile(authClient) {
         });
         
         console.log(`✅ File uploaded successfully. File ID: ${response.data.id}`);
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Error uploading file:', error.message || error);
     }
 }
 
+// Execute the script
 authorize().then(uploadFile).catch(console.error);
